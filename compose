@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "${SCRIPT_DIR}"
+
+DEFAULT_SERVICE="visitor-ip-api-go"
+
+compose_cmd() {
+  docker compose "$@"
+}
+
+show_usage() {
+  cat <<'EOF'
+Usage: ./compose {init|up|down|restart|logs|ps|pull|upgrade|redeploy|config} [service]
+
+Commands:
+  init      Validate Docker Compose configuration
+  up        Start services in background
+  down      Stop and remove services
+  restart   Restart services (optional: service name)
+  logs      Follow logs (default: visitor-ip-api-go, or specify service)
+  ps        Show running containers
+  pull      Pull images from registry
+  upgrade   Pull images from registry and restart
+  redeploy  Restart using current IMAGE_NAME without pull
+  config    Show resolved Docker Compose configuration
+
+Environment overrides:
+  IMAGE_NAME            Override the image tag, e.g. visitor-ip-api-go:local
+  HOST_PORT             Override published port, default 8466
+  COMPOSE_NETWORK_NAME  Override the Docker network name
+EOF
+}
+
+case "${1:-}" in
+  init)
+    compose_cmd config
+    ;;
+  up)
+    compose_cmd up -d
+    ;;
+  down)
+    compose_cmd down
+    ;;
+  restart)
+    if [ -n "${2:-}" ]; then
+      compose_cmd restart "${2}"
+    else
+      compose_cmd restart
+    fi
+    ;;
+  logs)
+    compose_cmd logs -f "${2:-${DEFAULT_SERVICE}}"
+    ;;
+  ps)
+    compose_cmd ps
+    ;;
+  pull)
+    compose_cmd pull
+    ;;
+  upgrade)
+    compose_cmd pull
+    compose_cmd up -d
+    ;;
+  redeploy)
+    compose_cmd up -d
+    ;;
+  config)
+    compose_cmd config
+    ;;
+  *)
+    show_usage
+    exit 1
+    ;;
+esac

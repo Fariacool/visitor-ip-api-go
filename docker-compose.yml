@@ -1,0 +1,17 @@
+services:
+  visitor-ip-api-go:
+    image: ${IMAGE_NAME:-ghcr.io/fariacool/visitor-ip-api-go:latest}
+    ports:
+      - "${HOST_PORT:-8466}:8466"
+    environment:
+      LISTEN_ADDR: ":8466"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ${COMPOSE_NETWORK_NAME:-visitor-ip-api-go}
